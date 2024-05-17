@@ -1,0 +1,34 @@
+<table class="table table-sm">
+    <thead>
+      <tr class="text-align-center text-center">
+        <th class="text-start">Name</th>
+        <th>Goals</th>
+        <th>MVP</th>
+        <th>Clutch</th>
+      </tr>
+    </thead>
+    {% for player in fixture.players.all %}
+    {% if player.team_played == team %}
+    <tbody>
+      <tr class="text-center">
+        <td class="w-24 text-start">{{player.person}}</td>
+        <td class="w-14 text">{{player.goals}}</td>
+        <td class="w-14">
+          {% if player.mvp_votes >= 3 %}
+            Yes 
+          {% else %}
+            No 
+          {% endif %}
+        </td>
+        <td class="w-14">
+          {% if fixture.winner == player.team_played and fixture.diff > 1 and player.goals >= fixture.diff %}
+            Yes
+          {% else %}
+            No
+          {% endif %}
+          </td>
+      </tr>
+    </tbody>
+    {% endif %}
+    {% endfor %}
+  </table>

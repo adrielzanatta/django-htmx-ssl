@@ -1,0 +1,9 @@
+<span class="text-lg">
+      {% if fixture.drafter_team == 0 %}
+        Team {{ team }}
+      {% elif fixture.drafter_team == team %}
+        Drafter Team
+      {% else %} 
+        Away Team
+      {% endif %}
+  </span>

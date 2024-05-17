@@ -1,0 +1,36 @@
+<div class="w-full bg-base-300 rounded-xl overflow-y-scroll">
+  <table class="table table-lg table-pin-rows">
+    <thead>
+      <tr class="bg-base-200 text-center">
+        <th class="w-1">#</th>
+        <th class="text-start">NAME</th>
+        <th>GP</th>
+        <th>PTS</th>
+        <th>APP%</th>
+        <th>GLS</th>
+        <th>GLS/G</th>
+        <th>W</th>
+        <th>L</th>
+        <th>T</th>
+        <th>MVP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in players.all %}
+      <tr class="text-center">
+        <td>{{ forloop.counter }}</td>
+        <td class="text-start">{{player.person__nickname}}</td>
+        <td>{{player.fixture__count}}</td>
+        <td>{{player.points__sum}}</td>
+        <td>{{player.pct_points|floatformat:1}}</td>
+        <td>{{player.goals__sum}}</td>
+        <td>{{player.goals__avg|floatformat:1}}</td>
+        <td>{{player.wins}}</td>
+        <td>{{player.losses}}</td>
+        <td>{{player.ties}}</td>
+        <td>{{player.is_mvp__count}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
