@@ -1,23 +1,24 @@
 from django.shortcuts import render
-from stats.models import SeasonPlayerStatistics, Fixture
+from stats.models import SeasonPlayerStatistics
 
 
 # Create your views here.
 def index(request):
-    return render(request, "home.html")
+    if request.htmx:
+        template = "partials/home_content.html"
+    else:
+        template = "content.html"
+
+    return render(request, template)
 
 
 def ranking_table(request):
     players = SeasonPlayerStatistics.objects.all()
-
     context = {"players": players}
 
-    return render(request, "rankings.html", context)
+    if request.htmx:
+        template = "partials/ranking_table.html"
+    else:
+        template = "content.html"
 
-
-def fixtures_list(request):
-    fixtures = Fixture.objects.all()
-
-    context = {"fixtures": fixtures}
-
-    return render(request, "fixtures_list.html", context)
+    return render(request, template, context)

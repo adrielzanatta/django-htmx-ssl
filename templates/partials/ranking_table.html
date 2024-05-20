@@ -1,4 +1,4 @@
-<div class="w-full bg-base-300 rounded-xl overflow-y-scroll">
+<div class="bg-base-300 rounded-xl overflow-y-scroll">
   <table class="table table-lg table-pin-rows">
     <thead>
       <tr class="bg-base-200 text-center">
@@ -22,8 +22,8 @@
         <td class="text-start">{{player.player}}</td>
         <td>{{player.points_earned}}</td>
         <td>{{player.goals_scored}}</td>
-        <td>{{player.points_pct}}</td>
-        <td>{{player.avg_goals}}</td>
+        <td>{{player.points_pct|floatformat:1}}</td>
+        <td>{{player.avg_goals|floatformat:1}}</td>
         <td>{{player.matches_played}}</td>
         <td>{{player.wins}}</td>
         <td>{{player.losses}}</td>

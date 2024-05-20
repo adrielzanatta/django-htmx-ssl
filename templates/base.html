@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -12,7 +14,8 @@
       rel="stylesheet"
       type="text/css"
     />
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
 
   </head>

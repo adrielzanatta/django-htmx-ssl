@@ -36,6 +36,17 @@ class FixturePlayerStatisticsInLine(admin.TabularInline):
 
 @admin.register(Fixture)
 class FixtureAdmin(admin.ModelAdmin):
-    inlines = [
-        FixturePlayerStatisticsInLine,
-    ]
+    inlines = [FixturePlayerStatisticsInLine]
+
+    def save_model(self, request, obj, form, change):
+        # Save the fixture first
+        super().save_model(request, obj, form, change)
+
+        # Now call the methods to calculate points and update statistics
+        obj.calculate_points_fixture_player_statistics()
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+
+        # Ensure fixture is saved again to update related stats properly
+        form.instance.save()
