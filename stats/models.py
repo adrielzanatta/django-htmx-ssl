@@ -38,7 +38,6 @@ class Fixture(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.round_number = self.get_round_number()
-        self.set_team_goals_scored()
         self.set_goal_balance()
         self.set_winner_team()
         self.calculate_points_fixture_player_statistics()
@@ -56,31 +55,21 @@ class Fixture(models.Model):
 
         return {team["team__side_name"]: team["total_goals"] for team in teams_goals_scored}
 
-    def set_team_goals_scored(self):
-        teams_goals = self.get_team_goals_scored()
-
-        teams = Team.objects.filter(fixture=self.pk)
-
-        for team in teams:
-            team.goals_scored = teams_goals[team.side_name]
-            team.save()
-
     def set_goal_balance(self):
-        teams_goals_scored = Team.objects.filter(fixture=self.pk)
-
-        team_1_goals_scored = teams_goals_scored.get(side_name=1)
-        team_2_goals_scored = teams_goals_scored.get(side_name=2)
-
-        return team_1_goals_scored - team_2_goals_scored
+        team_goals = self.get_team_goals_scored()
+        team_1_goals = team_goals.get(1, 0)
+        team_2_goals = team_goals.get(2, 0)
+        goal_balance = team_1_goals - team_2_goals
+        self.goal_balance = goal_balance
 
     def set_winner_team(self):
         diff = self.goal_balance
         if diff == 0:
-            return None
+            self.winner_team = None
         elif diff > 0:
-            return 1
+            self.winner_team = 1
         else:
-            return 2
+            self.winner_team = 2
 
     def calculate_points_fixture_player_statistics(self):
         winner_team = self.winner_team
@@ -103,8 +92,6 @@ class Team(models.Model):
     )
 
     side_name = models.IntegerField(choices=SIDE_CHOICES, default="0")
-    fixture = models.ForeignKey(Fixture, on_delete=models.CASCADE, related_name="teams")
-    goals_scored = models.PositiveSmallIntegerField(default=0, blank=True, null=True)
 
     def __str__(self) -> str:
         return str(self.side_name)

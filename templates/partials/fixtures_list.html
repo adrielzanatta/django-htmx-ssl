@@ -13,7 +13,7 @@
             <span class="text-xl">
               Team A
             </span>
-            <span class="text-3xl">{{ fixture.team_goals|key:1 }}</span>
+            <span class="text-3xl">{{ fixture.get_team_goals_scored|key:1 }}</span>
           </div>
 
           <div class="divider divider-vertical h-0"></div>
@@ -22,7 +22,7 @@
             <span class="text-xl">
               Team B
             </span>
-            <span class="text-3xl">{{ fixture.team_goals|key:2 }}</span>          
+            <span class="text-3xl">{{ fixture.get_team_goals_scored|key:2 }}</span>          
           </div>
 
         </div>
@@ -47,7 +47,7 @@
     <div class="collapse-content bg-base-200"> 
       <div class="divider divider-vertical h-0"></div>
       <div class="flex flex-row h-fit card bg-base-100 rounded-box justify-center">
-        {% with difference_goals=fixture.difference_goals|abs winner_team=fixture.winner_team %}
+        {% with difference_goals=fixture.goal_balance|abs winner_team=fixture.winner_team %}
           <div class="w-fit">
               {% include 'partials/players_table.html' with team=1 %}
           </div>
