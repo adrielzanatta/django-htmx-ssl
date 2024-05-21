@@ -17,7 +17,17 @@
     <script src="{% static 'js/htmx.min.js' %}"></script>
 
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              clifford: '#da373d',
+            }
+          }
+        }
+      }
+    </script>
   </head>
   <body>
       {% block content %} 

@@ -1,5 +1,7 @@
+{% load stats_extras %}
+
 <div class="flex flex-col overflow-auto gap-8">
-{% for fixture in fixtures.all %}
+{% for fixture in fixtures %}
   <div tabindex="0" class="collapse border border-base-300 bg-base-200 flex-shrink-0"> 
     <div class="collapse-title pl-12">
 
@@ -8,15 +10,19 @@
         <div class="flex flex-col justify-center items-end flex-1">
           
           <div class="flex justify-between place-items-baseline center w-full">
-            {% include 'partials/team_name.html' with team=1 %} 
-            <span class="text-3xl">{{ fixture.team_1_goals }}</span>
+            <span class="text-xl">
+              Team A
+            </span>
+            <span class="text-3xl">{{ fixture.team_goals|key:1 }}</span>
           </div>
 
           <div class="divider divider-vertical h-0"></div>
           
           <div class="flex justify-between align-top w-full">
-            {% include 'partials/team_name.html' with team=2 %}
-            <span class="text-3xl">{{ fixture.team_2_goals }}</span>          
+            <span class="text-xl">
+              Team B
+            </span>
+            <span class="text-3xl">{{ fixture.team_goals|key:2 }}</span>          
           </div>
 
         </div>
@@ -28,7 +34,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>
           </a>
 
-            <span class="text text-sm">Round {{fixture.number}}</span>
+            <span class="text text-sm">Round {{fixture.round_number}}</span>
 
           <span class="text text-sm">{{fixture.date}}</span>
           <span class="text text-sm">Drafter: {{fixture.drafter}}</span>
@@ -41,17 +47,17 @@
     <div class="collapse-content bg-base-200"> 
       <div class="divider divider-vertical h-0"></div>
       <div class="flex flex-row h-fit card bg-base-100 rounded-box justify-center">
+        {% with difference_goals=fixture.difference_goals|abs winner_team=fixture.winner_team %}
+          <div class="w-fit">
+              {% include 'partials/players_table.html' with team=1 %}
+          </div>
 
-        <div class="w-fit">
-            {% include 'partials/players_table.html' with team=1 %}
-        </div>
+          <div class="divider divider-horizontal"></div>
 
-        <div class="divider divider-horizontal"></div>
-
-        <div class="w-fit">
-          {% include 'partials/players_table.html' with team=2 %}
-        </div>
-
+          <div class="w-fit">
+            {% include 'partials/players_table.html' with team=2 %}
+          </div>
+        {% endwith %}
       </div>
 
     </div>

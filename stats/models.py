@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.db.models import Sum, Count, Case, When, IntegerField, Avg
 from django.db.models.functions import Now
+from django.core.cache import cache
 
 
 class User(AbstractBaseUser):
@@ -22,7 +22,7 @@ class Player(models.Model):
     nickname = models.CharField(max_length=100)
 
     def __str__(self) -> str:
-        return self.name
+        return self.nickname
 
 
 class Team(models.Model):
@@ -56,13 +56,20 @@ class Fixture(models.Model):
 
     @property
     def team_goals(self):
-        teams = (
-            FixturePlayerStatistics.objects.filter(fixture=self.id)
-            .values("team__side_name")
-            .annotate(total_goals=models.Sum("goals_scored"))
-        )
+        cache_key = f"fixture_{self.id}_team_goals"
+        team_goals = cache.get(cache_key)
 
-        return {team["team__side_name"]: team["total_goals"] for team in teams}
+        if team_goals is None:
+            teams = (
+                FixturePlayerStatistics.objects.filter(fixture=self.id)
+                .values("team__side_name")
+                .annotate(total_goals=models.Sum("goals_scored"))
+            )
+
+            team_goals = {team["team__side_name"]: team["total_goals"] for team in teams}
+            cache.set(cache_key, team_goals, timeout=300)  # Cache for 5 minutes
+
+        return team_goals
 
     @property
     def difference_goals(self):

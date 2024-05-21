@@ -2,11 +2,16 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum, Count, Case, When, Avg, IntegerField
 from stats.models import Fixture, SeasonPlayerStatistics, FixturePlayerStatistics
+from django.core.cache import cache
 
 
 @receiver(post_save, sender=Fixture)
 @receiver(post_delete, sender=Fixture)
 def fixture_count_changed(sender, instance, **kwargs):
+    # Clear cache
+    cache.clear()
+
+    # Update the season_player_statistics models
     fixture_player_statistics = FixturePlayerStatistics.objects.all()
 
     for p in fixture_player_statistics:

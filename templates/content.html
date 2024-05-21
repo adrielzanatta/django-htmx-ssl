@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% load static %} 
+{% load static %}
+{% load widget_tweaks %}
 
 {% block title %}
     <title>Sábado Sem Lei</title>
@@ -11,25 +12,51 @@
     
     <div class="navbar bg-base-300 rounded-box">
       <div class="flex-1 px-2 lg:flex-none">
-        <img src="{% static 'images/SSL.png' %}" class="w-12 h-12 me-2"
-        <a class="text font-bold">Sábado Sem Lei</a>
+        <img src="{% static 'images/SSL.png' %}" class="w-12 h-12 me-2">
+        <span class="text-2xl">Sábado Sem Lei</span>
       </div> 
       <div class="flex justify-end flex-1 px-2">
-        <div class="flex items-stretch" hx-boost="true" hx-target=#content hx-swap="innerHTML">
-          <a class="btn btn-ghost rounded-btn" 
-            href="{% url 'home' %}">
-            Home </a>
-          <a class="btn btn-ghost rounded-btn" 
-            href="{% url 'ranking_table' %}">
-            Ranking Table </a>
+        <div class="flex items-stretch">
+          <a class="btn btn-ghost rounded-btn" href="{% url 'home' %}">Home</a>
+          <a class="btn btn-ghost rounded-btn" href="{% url 'ranking_table' %}">Ranking Table</a>
+          <a class="btn btn-ghost rounded-btn" href="{% url 'fixtures_list' %}">Match History</a>
         </div>
       </div>
     </div>
 
+    <div class="flex flex-row justify-around">
+      
+      <form class="form-control flex flex-row justify-between gap-8" 
+        hx-include="this" hx-trigger="change" hx-target="#content" 
+        
+        {% if 'ranking_table' in request.path %}
+          hx-get="{% url 'ranking_table' %}"
+        {% elif 'fixtures_list' in request.path %}
+          hx-get="{% url 'fixtures_list' %}"
+        {% else %}
+          hx-get="{% url 'home' %}"
+        {% endif %}
+        >
+        
+        <!-- Season selection filter -->
+        
+        <div class="flex items-center gap-2">
+          <span class="text text-lg">Season</span>
+          <select class="select select-sm select-bordered bg-neutral rounded-xl" name="filter_season">
+            {% for season in seasons.all %}
+            <option value="{{ season.pk }}" {% if season == season_selected %}selected{% endif %}>{{ season.year }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+      </form>
+    </div>
 
     <div id='content' class="flex justify-center px-8 h-5/6">
       {% if 'ranking_table' in request.path %}
         {% include 'partials/ranking_table.html' %}
+      {% elif 'fixtures_list' in request.path %}
+        {% include 'partials/fixtures_list.html' %}
       {% else %}
         {% include 'partials/home_content.html' %}
       {% endif %}
