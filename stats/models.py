@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models.functions import Now
-from django.core.cache import cache
 
 
 class User(AbstractBaseUser):
@@ -25,22 +24,13 @@ class Player(models.Model):
         return self.nickname
 
 
-class Team(models.Model):
-    SIDE_CHOICES = (
-        (1, "Team A"),
-        (2, "Team B"),
-    )
-    side_name = models.IntegerField(choices=SIDE_CHOICES, default="0")
-
-    def __str__(self) -> str:
-        return str(self.side_name)
-
-
 class Fixture(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name="fixtures")
     drafter = models.ForeignKey(Player, on_delete=models.PROTECT, related_name="drafted_fixtures")
     date = models.DateField(default=Now())
-    round_number = models.IntegerField(blank=True, null=True)
+    round_number = models.PositiveSmallIntegerField(blank=True, null=True)
+    goal_balance = models.SmallIntegerField(blank=True, null=True)
+    winner_team = models.PositiveSmallIntegerField(blank=True, null=True)
 
     def __str__(self) -> str:
         return f"Season: {self.season} - Round: {self.round_number}"
@@ -48,40 +38,43 @@ class Fixture(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.round_number = self.get_round_number()
+        self.set_team_goals_scored()
+        self.set_goal_balance()
+        self.set_winner_team()
         self.calculate_points_fixture_player_statistics()
         super(Fixture, self).save(*args, **kwargs)
 
     def get_round_number(self):
         return self.season.fixtures.count() + 1
 
-    @property
-    def team_goals(self):
-        cache_key = f"fixture_{self.id}_team_goals"
-        team_goals = cache.get(cache_key)
+    def get_team_goals_scored(self):
+        teams_goals_scored = (
+            FixturePlayerStatistics.objects.filter(fixture=self.pk)
+            .values("team__side_name")
+            .annotate(total_goals=models.Sum("goals_scored"))
+        )
 
-        if team_goals is None:
-            teams = (
-                FixturePlayerStatistics.objects.filter(fixture=self.id)
-                .values("team__side_name")
-                .annotate(total_goals=models.Sum("goals_scored"))
-            )
+        return {team["team__side_name"]: team["total_goals"] for team in teams_goals_scored}
 
-            team_goals = {team["team__side_name"]: team["total_goals"] for team in teams}
-            cache.set(cache_key, team_goals, timeout=300)  # Cache for 5 minutes
+    def set_team_goals_scored(self):
+        teams_goals = self.get_team_goals_scored()
 
-        return team_goals
+        teams = Team.objects.filter(fixture=self.pk)
 
-    @property
-    def difference_goals(self):
-        team_goals = self.team_goals
-        team_1_goals = team_goals.get(1, 0)
-        team_2_goals = team_goals.get(2, 0)
+        for team in teams:
+            team.goals_scored = teams_goals[team.side_name]
+            team.save()
 
-        return team_1_goals - team_2_goals
+    def set_goal_balance(self):
+        teams_goals_scored = Team.objects.filter(fixture=self.pk)
 
-    @property
-    def winner_team(self):
-        diff = self.difference_goals
+        team_1_goals_scored = teams_goals_scored.get(side_name=1)
+        team_2_goals_scored = teams_goals_scored.get(side_name=2)
+
+        return team_1_goals_scored - team_2_goals_scored
+
+    def set_winner_team(self):
+        diff = self.goal_balance
         if diff == 0:
             return None
         elif diff > 0:
@@ -101,6 +94,20 @@ class Fixture(models.Model):
             else:
                 player.points = 0
             player.save()
+
+
+class Team(models.Model):
+    SIDE_CHOICES = (
+        (1, "Team A"),
+        (2, "Team B"),
+    )
+
+    side_name = models.IntegerField(choices=SIDE_CHOICES, default="0")
+    fixture = models.ForeignKey(Fixture, on_delete=models.CASCADE, related_name="teams")
+    goals_scored = models.PositiveSmallIntegerField(default=0, blank=True, null=True)
+
+    def __str__(self) -> str:
+        return str(self.side_name)
 
 
 class FixturePlayerStatistics(models.Model):
