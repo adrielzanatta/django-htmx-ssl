@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models.functions import Now
+from django.core.cache import cache
 
 
 class User(AbstractBaseUser):
@@ -47,13 +48,20 @@ class Fixture(models.Model):
         return self.season.fixtures.count() + 1
 
     def get_team_goals_scored(self):
-        teams_goals_scored = (
-            FixturePlayerStatistics.objects.filter(fixture=self.pk)
-            .values("team__side_name")
-            .annotate(total_goals=models.Sum("goals_scored"))
-        )
+        cache_key = f"fixture_{self.id}_team_goals"
+        team_goals = cache.get(cache_key)
 
-        return {team["team__side_name"]: team["total_goals"] for team in teams_goals_scored}
+        if team_goals is None:
+            teams = (
+                FixturePlayerStatistics.objects.filter(fixture=self.id)
+                .values("team__side_name")
+                .annotate(total_goals=models.Sum("goals_scored"))
+            )
+
+            team_goals = {team["team__side_name"]: team["total_goals"] for team in teams}
+            cache.set(cache_key, team_goals, timeout=300)  # Cache for 5 minutes
+
+        return team_goals
 
     def set_goal_balance(self):
         team_goals = self.get_team_goals_scored()
